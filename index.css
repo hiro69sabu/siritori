@@ -1,0 +1,274 @@
+
+body {
+  font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans', Meiryo, sans-serif;
+  background-color: #f0f2f5;
+  color: #333;
+  margin: 0;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+#game-container {
+  background-color: #ffffff;
+  padding: 25px 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 700px;
+  text-align: center;
+}
+
+h1 {
+  color: #1a73e8; /* Google Blue */
+  margin-bottom: 20px; /* Reduced margin slightly */
+  font-size: 2em;
+}
+
+#top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px 0;
+  border-bottom: 1px solid #e0e0e0; /* Optional: adds a separator */
+}
+
+#player-timer-area {
+  font-size: 1em; 
+  font-weight: normal; /* Label text normal weight */
+  display: flex;
+  align-items: baseline; /* Aligns "秒" with the large number's baseline */
+  gap: 5px; /* Space between label, number, and "秒" */
+  color: #333; /* Default text color for the label */
+}
+
+#player-time-remaining {
+  font-size: 3em; /* Significantly larger number */
+  font-weight: bold;
+  color: #d93025; 
+  line-height: 1; /* Adjust line height for large font */
+}
+
+#game-controls {
+  /* Desktop: No specific alignment needed as top-bar handles space-between */
+}
+
+#game-controls button#startButton { /* More specific selector */
+  background-color: #1a73e8;
+  color: white;
+  border: none;
+  padding: 4px 8px; /* Further reduced padding for a smaller button */
+  font-size: 0.8em;  /* Further reduced font size */
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#game-controls button#startButton:hover {
+  background-color: #1765c2;
+}
+
+#game-controls button#startButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+
+#current-word-text {
+  font-size: 2.2em;
+  color: #d93025; /* Google Red */
+  margin: 10px 0 20px;
+  min-height: 35px; 
+  letter-spacing: 0.05em;
+  word-break: break-all;
+}
+
+h3 {
+  color: #1e8e3e; /* Google Green */
+  margin-top: 0; 
+  margin-bottom: 10px;
+  font-size: 1.2em;
+}
+
+#player-input-area {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 20px 0;
+  justify-content: center;
+}
+
+#player-input {
+  flex-grow: 1;
+  padding: 10px;
+  font-size: 1.2em;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  box-sizing: border-box;
+  max-width: 70%;
+  text-align: center;
+}
+
+#player-input:focus {
+  border-color: #1a73e8;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+#live-game-info-panel {
+  margin-bottom: 20px;
+  background-color: #e8f0fe; 
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 5px solid #1a73e8; 
+}
+
+#current-word-display {
+  margin-bottom: 15px;
+  padding: 15px; 
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+#current-word-display p {
+  margin: 5px 0;
+  font-size: 1.1em;
+}
+
+#next-kana {
+  font-weight: bold;
+  font-size: 1.5em;
+  color: #d93025;
+}
+
+#message-area {
+  min-height: 25px;
+  margin: 15px 0;
+  font-weight: bold;
+}
+
+#game-message.error {
+  color: #d93025;
+}
+
+#game-message.success {
+  color: #1e8e3e;
+}
+
+#word-history-container {
+  margin-top: 0; 
+  text-align: left;
+  max-height: 150px; 
+  overflow-y: auto;
+  background-color: #fff; 
+  padding: 10px; 
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+#word-history {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+}
+
+#word-history li {
+  padding: 6px 0; 
+  border-bottom: 1px dashed #eee;
+  font-size: 0.95em; 
+  word-break: break-all;
+}
+
+#word-history li:last-child {
+  border-bottom: none;
+}
+
+#score-display-area {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #e6f4ea;
+    border-radius: 8px;
+    border: 1px solid #b2dfdb;
+}
+#score-display-area h3 {
+    margin-top: 0;
+    color: #004d40;
+}
+#player-score-display, #high-score-display {
+    font-size: 1.1em;
+    color: #00695c;
+}
+#high-score-display.new-record {
+    color: #d84315;
+    font-weight: bold;
+}
+
+
+.hidden {
+  display: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  body {
+    padding: 10px;
+  }
+  #game-container {
+    padding: 15px;
+  }
+  h1 {
+    font-size: 1.6em;
+  }
+
+  #top-bar {
+    flex-wrap: wrap; 
+    gap: 10px; 
+    border-bottom: none; 
+    padding-bottom: 0;
+    justify-content: space-between; 
+    align-items: center; 
+  }
+  #player-timer-area {
+    /* No specific changes needed here for wrapping, default flex item behavior is fine */
+  }
+  #player-time-remaining {
+    font-size: 2.5em; 
+  }
+
+  #game-controls {
+    display: flex; 
+    justify-content: flex-end; 
+    /* flex-basis: 100%; Removed this problematic line */
+  }
+  #game-controls button#startButton {
+    width: auto; 
+    padding: 6px 12px; 
+    font-size: 0.9em;  
+  }
+
+  #current-word-text {
+    font-size: 1.8em;
+  }
+  #player-input-area {
+    flex-direction: column;
+  }
+  #player-input {
+    width: 100%;
+    max-width: 100%;
+    margin-bottom: 10px;
+  }
+
+  #live-game-info-panel {
+    padding: 10px;
+  }
+  
+  #word-history-container {
+    max-height: 120px; 
+  }
+}

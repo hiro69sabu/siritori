@@ -1,0 +1,65 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIしりとりタイピングの練習になるかも～</title>
+  <link rel="stylesheet" href="index.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "@google/genai": "https://esm.sh/@google/genai@^0.14.0",
+        "marked": "https://esm.sh/marked@^15.0.7"
+      }
+    }
+  </script>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
+  <div id="game-container">
+    <h1>AIしりとりタイピングの練習になるかも～</h1>
+
+    <div id="top-bar">
+      <div id="player-timer-area">
+        プレイヤー残り時間: <span id="player-time-remaining">60</span>秒
+      </div>
+      <div id="game-controls">
+        <button id="startButton">ゲーム開始</button>
+      </div>
+    </div>
+
+    <div id="game-area" class="hidden">
+      <div id="live-game-info-panel">
+        <div id="word-history-container">
+          <h3>言葉の履歴:</h3>
+          <ul id="word-history"></ul>
+        </div>
+      </div>
+
+      <div id="current-word-display">
+         <p>前の単語: <span id="previous-word-display">なし</span></p>
+        <p>次の単語の開始文字: 「<span id="next-kana">?</span>」</p>
+        <h2 id="current-word-text">---</h2>
+      </div>
+
+      <div id="player-input-area">
+        <input type="text" id="player-input" placeholder="言葉を入力してEnterキーを押す" lang="ja" disabled aria-label="Shiritori word input">
+      </div>
+
+      <div id="message-area">
+        <p id="game-message">&nbsp;</p>
+      </div>
+      
+      <div id="score-display-area" class="hidden">
+        <h3>ゲーム結果</h3>
+        <p id="player-score-display">あなたがタイプした総文字数: 0</p>
+        <p id="high-score-display">最高記録: 0文字</p>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="index.tsx"></script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>

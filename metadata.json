@@ -1,0 +1,6 @@
+{
+  "name": "Copy of AIしりとりタイピングの練習になるかも～",
+  "description": "Play an advanced Shiritori (Japanese word chain) against an AI powered by Gemini. Features player timer, AI turn timer, specific word rules (2+ chars, Hiragana/Katakana, chōonpu, small kana), and high score tracking.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
