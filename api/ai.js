@@ -1,55 +1,50 @@
-// 【修正点】 正しいパッケージ名を、Vercelで最も安定しているrequire形式で読み込む
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+// 【最終修正】 正しいパッケージ名を、プロジェクトの標準であるimport形式で読み込む
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // この関数が、Vercelのサーバーレス関数として動作します
-module.exports = async (req, res) => {
-  // CORSヘッダーの設定（どのウェブサイトからでもAPIを呼び出せるようにする）
-  // 本番環境では、特定のドメインに限定するのがより安全です
+export default async function handler(req, res) {
+  // CORSヘッダーの設定
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  // OPTIONSメソッドのリクエストは、CORSのプリフライトチェック用なので、ここで処理を終了
+  // OPTIONSメソッドのプリフライトチェック
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // POSTメソッド以外のリクエストは受け付けない
+  // POSTメソッド以外のリクエストは拒否
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
   try {
-    // Vercelの環境変数からAPIキーを安全に取得
+    // 環境変数からAPIキーを取得
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      // APIキーが設定されていない場合は、サーバー側でエラーを返す
       return res.status(500).json({ error: 'APIキーがサーバーに設定されていません。' });
     }
 
-    // フロントエンドから送られてきたデータを取得
-    //【堅牢化】req.bodyが存在しないケースも考慮
+    // フロントエンドからのデータを取得
     const { prompt } = req.body || {};
     if (!prompt) {
       return res.status(400).json({ error: 'プロンプトがありません。' });
     }
     
-    // Gemini APIのクライアントを初期化
+    // Gemini APIクライアントの初期化
     const genAI = new GoogleGenerativeAI(apiKey);
-    //【修正点】最新の推奨モデル名に変更
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    // Gemini APIにプロンプトを送信し、結果を取得
+    // AIにプロンプトを送信
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const aiText = response.text();
 
-    // 成功した結果をフロントエンドに返す
+    // 成功した結果を返す
     res.status(200).json({ text: aiText });
 
   } catch (error) {
-    // 何かエラーが発生した場合
     console.error("APIルートでエラーが発生しました:", error);
     res.status(500).json({ error: 'AIとの通信中にサーバーでエラーが発生しました。' });
   }
-};
+}
