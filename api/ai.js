@@ -1,7 +1,8 @@
-import { GoogleGenAI } from "@google/genai";
+// 【修正点】 正しいパッケージ名を、Vercelで最も安定しているrequire形式で読み込む
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // この関数が、Vercelのサーバーレス関数として動作します
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   // CORSヘッダーの設定（どのウェブサイトからでもAPIを呼び出せるようにする）
   // 本番環境では、特定のドメインに限定するのがより安全です
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -27,14 +28,16 @@ export default async function handler(req, res) {
     }
 
     // フロントエンドから送られてきたデータを取得
-    const { prompt } = req.body;
+    //【堅牢化】req.bodyが存在しないケースも考慮
+    const { prompt } = req.body || {};
     if (!prompt) {
       return res.status(400).json({ error: 'プロンプトがありません。' });
     }
     
     // Gemini APIのクライアントを初期化
-    const genAI = new GoogleGenAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-preview-0514" });
+    const genAI = new GoogleGenerativeAI(apiKey);
+    //【修正点】最新の推奨モデル名に変更
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     // Gemini APIにプロンプトを送信し、結果を取得
     const result = await model.generateContent(prompt);
@@ -49,4 +52,4 @@ export default async function handler(req, res) {
     console.error("APIルートでエラーが発生しました:", error);
     res.status(500).json({ error: 'AIとの通信中にサーバーでエラーが発生しました。' });
   }
-}
+};
