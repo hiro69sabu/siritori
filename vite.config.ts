@@ -1,13 +1,10 @@
 import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 
-export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, '.', '');
+// `loadEnv` と `mode` は不要になるため、削除します
+export default defineConfig(() => {
     return {
-      define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
-      },
+      // `define` ブロックを完全に削除しました。
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),
