@@ -4,7 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// このイベントリスナーが、HTMLの読み込み完了を待ってから中のコードを実行します
+// ★★★★★ ここを、正しいパスに最終修正しました ★★★★★
+import { buildPrompt } from './api/promptBuilder';
+
 document.addEventListener('DOMContentLoaded', () => {
 
   // DOM Elements
@@ -78,15 +80,36 @@ document.addEventListener('DOMContentLoaded', () => {
     setTurn(true);
   }
 
-  function getLastKana(word: string): string { if (!word) return ''; let effectiveLastChar = word.slice(-1); if (effectiveLastChar === 'ー') { if (word.length >= 2) { effectiveLastChar = word.slice(-2, -1); } else { return ''; } } return normalizeCharToLargeHiragana(effectiveLastChar); }
+  function getLastKana(word: string): string {
+    if (!word) {
+      return '';
+    }
+    const nonLinkingKana = new Set(['ゃ', 'ゅ', 'ょ', 'ぁ', 'ぃ', 'ぅ', 'ぇ', 'ぉ', 'っ', 'ャ', 'ュ', 'ョ', 'ァ', 'ィ', 'ゥ', 'ェ', 'ォ', 'ッ']);
+    let effectiveWord = word;
+    if (effectiveWord.endsWith('ー')) {
+      if (effectiveWord.length < 2) {
+        return '';
+      }
+      effectiveWord = effectiveWord.slice(0, -1);
+    }
+    for (let i = effectiveWord.length - 1; i >= 0; i--) {
+      const char = effectiveWord[i];
+      if (!nonLinkingKana.has(char)) {
+        return normalizeCharToLargeHiragana(char);
+      }
+    }
+    return '';
+  }
 
   function validatePlayerWord(playerWord: string): { isValid: boolean, message: string, word: string } {
     const trimmedWord = playerWord.trim();
     if (!trimmedWord) return { isValid: false, message: '言葉を入力してください。', word: trimmedWord };
     if (!/^[ぁ-んァ-ンヴー]+$/.test(trimmedWord)) return { isValid: false, message: 'ひらがなまたはカタカナで入力してください。', word: trimmedWord };
     if (trimmedWord.length < MIN_WORD_LENGTH) return { isValid: false, message: `${MIN_WORD_LENGTH}文字以上の言葉を入力してください。`, word: trimmedWord };
-    if (trimmedWord.slice(-1) === 'ん' || trimmedWord.slice(-1) === 'ン') return { isValid: false, message: '「ん」で終わる言葉は使えません！あなたの負けです。', word: trimmedWord };
-    // ... 他のバリデーションルールは省略 ...
+    if (trimmedWord.length >= 3 && new Set(trimmedWord.split('')).size === 1) {
+      return { isValid: false, message: '同じ文字が連続する単語は使用できません。', word: trimmedWord };
+    }
+    if (trimmedWord.slice(-1) === 'ん' || trimmedWord.slice(-1) === 'ン') return { isValid: false, message: '「ん」で終わる言葉は使えません！ゲーム終了です。', word: trimmedWord };
     if (wordHistory.map(w => w.split(': ')[1]).includes(trimmedWord)) return { isValid: false, message: 'その言葉は既に使用されています。', word: trimmedWord };
     if (currentLinkingKana) { const playerFirstCharNormalized = normalizeCharToLargeHiragana(trimmedWord.charAt(0)); if (playerFirstCharNormalized !== currentLinkingKana) { return { isValid: false, message: `「${currentLinkingKana}」で始まる言葉を入力してください。`, word: trimmedWord }; } }
     return { isValid: true, message: '良い言葉です！', word: trimmedWord };
@@ -95,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function handlePlayerSubmit() {
     if (!isPlayerTurn || gameOver) return;
     const validation = validatePlayerWord(playerInput.value);
-    if (!validation.isValid) { displayMessage(validation.message, true); if (validation.message.includes("あなたの負けです")) { endGame(validation.message); } return; }
+    if (!validation.isValid) { displayMessage(validation.message, true); if (validation.message.includes("ゲーム終了")) { endGame(validation.message); } return; }
     if (wordHistory.length > 0) stopPlayerTimer();
     const validPlayerWord = validation.word;
     displayMessage('AIの応答を待っています...', false);
@@ -103,15 +126,20 @@ document.addEventListener('DOMContentLoaded', () => {
     playerTypedCharactersCount += validPlayerWord.length;
     currentWord = validPlayerWord;
     currentLinkingKana = getLastKana(validPlayerWord);
-    if (!currentLinkingKana) { endGame(`「${validPlayerWord}」から次の文字を特定できませんでした。あなたの負けです。`); return; }
+    if (!currentLinkingKana) { endGame(`「${validPlayerWord}」から次の文字を特定できませんでした。ゲーム終了です。`); return; }
     updateUIForNewWord();
     playerInput.value = '';
     setTurn(false);
     if (aiTurnTimeoutId) clearTimeout(aiTurnTimeoutId);
-    aiTurnTimeoutId = setTimeout(() => { if (!isPlayerTurn && !gameOver) { endGame("AIが15秒以内に応答しませんでした。あなたの勝ちです！"); } }, AI_TURN_TIME_LIMIT_MS);
+    aiTurnTimeoutId = setTimeout(() => { if (!isPlayerTurn && !gameOver) { endGame("AIが15秒以内に応答しませんでした。ゲーム終了です。"); } }, AI_TURN_TIME_LIMIT_MS);
     
-    // バックエンドに渡すプロンプトを構築
-    const prompt = `あなたはしりとりゲームのAIです。厳格なルールに従ってください。ルール: 1. ${MIN_WORD_LENGTH}文字以上。 2. ひらがな・カタカナのみ。 3.「ん」で終わらない。 4. 既出単語禁止 (履歴: ${wordHistory.map(w => w.split(': ')[1]).join(', ')})。 5. 直前の単語は「${validPlayerWord}」でした。次の単語は「${currentLinkingKana}」で始まる一般的な名詞を一つだけ答えてください。`;
+    const prompt = buildPrompt(
+      validPlayerWord,
+      currentLinkingKana,
+      wordHistory.map(w => w.split(': ')[1]),
+      MIN_WORD_LENGTH,
+      AI_TURN_TIME_LIMIT_MS
+    );
     const aiResponse = await getAIWord(prompt);
 
     if (aiTurnTimeoutId) clearTimeout(aiTurnTimeoutId);
@@ -120,14 +148,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (aiResponse) {
       processAIsWord(aiResponse);
     } else {
-      if (!gameOver) endGame("AIが言葉を見つけられませんでした。あなたの勝ちです！");
+      if (!gameOver) endGame("AIが言葉を見つけられませんでした。ゲーム終了です。");
     }
   }
 
-  // ★★★ API呼び出し関数を修正 ★★★
   async function getAIWord(prompt: string): Promise<string | null> {
     try {
-      //【重要修正】APIのパスを、Vercelが正しく認識できる '/api/ai.js' に変更
       const response = await fetch('/api/ai.js', {
         method: 'POST',
         headers: {
@@ -136,13 +162,10 @@ document.addEventListener('DOMContentLoaded', () => {
         body: JSON.stringify({ prompt: prompt }),
       });
 
-      // サーバーからのレスポンスをJSONとして解析
       const data = await response.json();
 
-      // サーバーがエラーを返した場合（200番台以外のステータスコード）
       if (!response.ok) {
         console.error("サーバーがエラーを返しました:", data);
-        //【改善】サーバーからの詳細なエラーメッセージを表示
         const errorMessage = data.error?.message || '不明なサーバーエラーが発生しました。';
         displayMessage(`サーバーエラー: ${errorMessage} (コード: ${response.status})`, true);
         return null;
@@ -151,7 +174,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return data.text;
 
     } catch (error) {
-      // ネットワークエラーや、レスポンスがJSONでない場合など
       console.error("バックエンドAPIとの通信エラー:", error);
       displayMessage("サーバーとの通信に失敗しました。ネットワーク接続か、サーバーのログを確認してください。", true);
       return null;
@@ -159,12 +181,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function processAIsWord(aiWord: string) {
-    // AIの単語検証ロジック (省略)
-    // ...
     addWordToHistory(aiWord, "AI");
     currentWord = aiWord;
     currentLinkingKana = getLastKana(aiWord);
-    if (!currentLinkingKana) { endGame(`AIが無効な単語「${aiWord}」を出しました。あなたの勝ちです！`); return; }
+    if (!currentLinkingKana) { endGame(`AIが無効な単語「${aiWord}」を出しました。ゲーム終了です。`); return; }
     updateUIForNewWord();
     setTurn(true);
     startPlayerTimer();
@@ -178,9 +198,33 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateUIForNewWord() { currentWordTextDisplay.textContent = currentWord; previousWordDisplay.textContent = wordHistory.length > 1 ? wordHistory[wordHistory.length - 2].split(': ')[1] : (wordHistory.length === 1 ? wordHistory[0].split(': ')[1] : 'なし'); nextKanaDisplay.textContent = currentLinkingKana; }
   function displayMessage(message: string, isError: boolean) { gameMessage.textContent = message; gameMessage.className = isError ? 'error' : 'success'; }
   function clearTimers() { if (playerTimerIntervalId) clearInterval(playerTimerIntervalId); if (aiTurnTimeoutId) clearTimeout(aiTurnTimeoutId); playerTimerIntervalId = null; aiTurnTimeoutId = null; }
-  function startPlayerTimer() { if (gameOver) return; clearTimers(); playerTimerIntervalId = setInterval(() => { playerTimeRemaining--; playerTimeRemainingDisplay.textContent = playerTimeRemaining.toString(); if (playerTimeRemaining <= 0) { endGame("時間切れです！あなたの負けです。"); } }, 1000); }
+  
+  function startPlayerTimer() { 
+    if (gameOver) return; 
+    clearTimers(); 
+    playerTimerIntervalId = setInterval(() => { 
+      playerTimeRemaining--; 
+      playerTimeRemainingDisplay.textContent = playerTimeRemaining.toString(); 
+      if (playerTimeRemaining <= 0) { 
+        endGame("時間切れです！ゲーム終了");
+      } 
+    }, 1000); 
+  }
+  
   function stopPlayerTimer() { if (playerTimerIntervalId) { clearInterval(playerTimerIntervalId); playerTimerIntervalId = null; } }
-  function endGame(message: string) { if (gameOver) return; gameOver = true; clearTimers(); displayMessage(message, false); setTurn(false); startButton.disabled = false; startButton.textContent = 'もう一度遊ぶ'; scoreDisplayArea.classList.remove('hidden'); playerScoreDisplay.textContent = `あなたがタイプした総文字数: ${playerTypedCharactersCount}`; saveHighScore(playerTypedCharactersCount); }
+  
+  function endGame(message: string) { 
+    if (gameOver) return; 
+    gameOver = true; 
+    clearTimers(); 
+    displayMessage(message, false); 
+    setTurn(false); 
+    startButton.disabled = false; 
+    startButton.textContent = 'もう一度遊ぶ'; 
+    scoreDisplayArea.classList.remove('hidden'); 
+    playerScoreDisplay.textContent = `あなたがタイプした総文字数: ${playerTypedCharactersCount}`; 
+    saveHighScore(playerTypedCharactersCount); 
+  }
 
   // Initialize
   initializeGame();
