@@ -1,4 +1,4 @@
-// 【Vercel環境向け最終修正版 Ver.2.0】
+// 【Vercel環境向け最終修正版 Ver.3.0 - モデルをProにアップグレード】
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Vercelがこのファイルをサーバーレス関数として認識するためのデフォルトエクスポート
@@ -42,7 +42,9 @@ export default async function handler(req, res) {
 
     // Geminiクライアントを初期化します。
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    // ★★★★★ ここを、最強のProモデルに変更しました ★★★★★
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro-latest" });
 
     // AIにコンテンツ生成をリクエストします。
     const result = await model.generateContent(prompt);
