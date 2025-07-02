@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// ★★★★★ ここを、正しいパスに最終修正しました ★★★★★
 import { buildPrompt } from './api/promptBuilder';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -180,11 +179,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function processAIsWord(aiWord: string) {
-    addWordToHistory(aiWord, "AI");
-    currentWord = aiWord;
-    currentLinkingKana = getLastKana(aiWord);
-    if (!currentLinkingKana) { endGame(`AIが無効な単語「${aiWord}」を出しました。ゲーム終了です。`); return; }
+  // ★★★★★ ここに、AIの返答を洗浄する処理を追加しました ★★★★★
+  function processAIsWord(rawAiWord: string) {
+    // AIの返答から、前後の空白や改行コードを完全に取り除く
+    const cleanedAiWord = rawAiWord.trim();
+
+    // TODO: ここで、AIが返してきた単語がルールに従っているか、
+    //       より厳密な検証を行うロジックを追加することも可能（例：「ん」で終わっていないか、など）
+
+    addWordToHistory(cleanedAiWord, "AI");
+    currentWord = cleanedAiWord;
+    currentLinkingKana = getLastKana(cleanedAiWord);
+    if (!currentLinkingKana) { endGame(`AIが無効な単語「${cleanedAiWord}」を出しました。ゲーム終了です。`); return; }
     updateUIForNewWord();
     setTurn(true);
     startPlayerTimer();
